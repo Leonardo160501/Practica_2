@@ -82,6 +82,8 @@ ${COMPILER}:
 ${COMPILER}/main.axf: ${COMPILER}/main.o
 ${COMPILER}/main.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/main.axf: ${COMPILER}/GPIO.o
+${COMPILER}/main.axf: ${COMPILER}/PLL_INIT.o
+${COMPILER}/main.axf: ${COMPILER}/SysTick_Init.o
 ${COMPILER}/main.axf: main.ld
 SCATTERgcc_main=main.ld
 ENTRY_main=ResetISR

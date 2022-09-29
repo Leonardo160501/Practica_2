@@ -1,43 +1,38 @@
 
 #include "lib/include.h"
 
-typedef struct ElementoLista {
-char *dato;
-struct ElementoLista *siguiente;
-}Elemento;
+#define SENSOR  (*((volatile uint32_t *)0x4002400C))
+#define LIGHT   (*((volatile uint32_t *)0x400050FC))
+// Linked data structure
 
-typedef struct ListaIdentificar {
-Elemento *inicio;
-Elemento *fin;
-int tamanio;
-}Lista;
+struct State {
+  uint32_t Out;
+  uint32_t Time; 
+  uint32_t Next[4];};
 
-unsigned long Led;
+typedef const struct State State_t;
+#define goN   0
+#define waitN 1
+#define goE   2
+#define waitE 3
 
-
+State_t FSM[4]={
+ {0x21,300,{goN,waitN,goN,waitN}},
+ {0x22, 50,{goE,goE,goE,goE}},
+ {0x0C,300,{goE,goE,waitE,waitE}},
+ {0x14, 50,{goN,goN,goN,goN}}};
+uint32_t S;  // index to the current state
+uint32_t Input;
 
 int main(void){
-
-                   
+  PLL_Init();       // 80 MHz, Program 10.1
+  SysTick_Init();   // Program 10.2
+  Configurar_GPIO();
+  S = goN;  
   while(1){
-    Configurar_GPIO();
-    //if(PF4 == 0x0){
-    Led = 0x02;            // reverse value of LED
-    GPIOF->DATA = Led;
-    //GPIO_PORTF_DATA_R = Led;   // write value to PORTF DATA register,toggle led
-    Delay();
-    Led = 0x04;            // reverse value of LED
-    GPIOF->DATA = Led;
-    //GPIO_PORTF_DATA_R = Led;   // write value to PORTF DATA register,toggle led
-    Delay();
-    Led = 0x08;            // reverse value of LED
-    GPIOF->DATA = Led;
-    //GPIO_PORTF_DATA_R = Led;   // write value to PORTF DATA register,toggle led
-    Delay();
-    Led = 0x0A;            // reverse value of LED
-    GPIOF->DATA = Led;
-    //GPIO_PORTF_DATA_R = Led;   // write value to PORTF DATA register,toggle led
-    Delay();
-    // }
+    LIGHT = FSM[S].Out;  // set lights
+    SysTick_Wait10ms(FSM[S].Time);
+    Input = SENSOR;     // read sensors
+    S = FSM[S].Next[Input]; 
   }
 }
